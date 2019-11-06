@@ -4,6 +4,8 @@ runtime: python37
 # 다음줄이 있으면 main.py가 필요없어지는 같다
 # entrypoint: gunicorn -b :$PORT main.wsgi
 
+instance_class: B1
+
 handlers:
 # This configures Google App Engine to serve the files in the app's static
 # directory.
@@ -15,4 +17,9 @@ handlers:
 # the entire handlers section) when there are no static files defined.
 - url: /.*
   script: auto
+
+
+basic_scaling:
+  max_instances: 1
+  idle_timeout: 30m
 # [END django_app]

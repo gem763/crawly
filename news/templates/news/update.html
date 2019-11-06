@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <title>NewsCrawler</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id='status'>updating...</div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+    $.ajax({
+      url: '/news/newscrawl_and_bigquerize/',
+      async: true,
+      type: 'GET',
+      data: {},
+      dataType: 'json',
+      success: function(jqXHR) {
+        $('#status').html(jqXHR.result);
+      }
+    });
+  </script>
+</body>
+</html>
