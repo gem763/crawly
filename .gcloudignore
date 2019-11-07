@@ -13,10 +13,8 @@
 .git
 .gitignore
 
-# Python pycache:
-__pycache__/
-# Ignored by the build system
-/setup.cfg
+node_modules
+#!include:.gitignore
 
-venv
-test
+test/en_core_web_lg-2.1.0.tar.gz
+test/bbc

@@ -26,6 +26,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
 # Suppress UnknownTimezoneWarning
 import warnings
 from dateutil.parser import UnknownTimezoneWarning
@@ -140,6 +143,7 @@ def collect_urls(src):
         # 다음 코드를 주피터에서 돌리려면, tornado를 downgrade 해야함
         # pip install tornado==4.5.3
         result = loop.run_until_complete(main())
+        #result = asyncio.run(main())
         result = dict(result) #set.union(*result)
 
     except Exception as ex:
@@ -256,58 +260,57 @@ def select_urls(urls, recorder):
     return selected
 
 
-def crawl(urls):
-    n_total = sum([len(v) for _,v in urls.items()])
-    prg = Progressor(n_total, formater_suffix='Crawling... {pub:<20}')
-    newspaper_config = _config()
 
+def detect_lang(article):
+    lang = article.meta_lang
+
+    if lang=='':
+        return detect(article.text)
+
+    else:
+        return lang
+
+
+def get_article(url):
+    #article = Article(url, config=newspaper_config)
+    article = Article(url, config=_config())
+    article.download()
+    article.parse()
+    return article    
+
+
+def get_title(article):
+    if article.title in ['', '-', None]:
+    # '':cbc, '-':townhall
+        html = requests.get(article.url).text
+        extracted_title = extraction.Extractor().extract(html, source_url=article.url).title
+
+        if extracted_title in ['', '-', None]:
+            if article.description=='':
+                return article.pub
+            else:
+                return article.description
+
+        else:
+            return extracted_title
+
+    else:
+        return article.title
+
+
+
+def crawl_by_pub(pub, _urls):
+    pass
+    
+    
+def crawl(urls):
+    #n_total = len(urls) #sum([len(v) for _,v in urls.items()])
+    n_total = sum([1 for _,v in urls.items() if len(v)!=0])
+    prg = Progressor(n_total, formater_suffix='Crawling... {pub:<20}')
     downloaded = {}
     trashed = {}
 
-
-    def makedir_if_not_exists(file):
-        _dir = os.path.dirname(file)
-
-        if not os.path.isdir(_dir):
-            os.makedirs(_dir)
-
-
-    def detect_lang(article):
-        lang = article.meta_lang
-
-        if lang=='':
-            return detect(article.text)
-
-        else:
-            return lang
-
-
-    def get_article(url):
-        article = Article(url, config=newspaper_config)
-        article.download()
-        article.parse()
-        return article
-
-
-    def get_title(article):
-        if article.title in ['', '-', None]:
-        # '':cbc, '-':townhall
-            html = requests.get(article.url).text
-            extracted_title = extraction.Extractor().extract(html, source_url=article.url).title
-
-            if extracted_title in ['', '-', None]:
-                if article.description=='':
-                    return article.pub
-                else:
-                    return article.description
-
-            else:
-                return extracted_title
-
-        else:
-            return article.title
-
-
+    
     async def _crawl(pub, _urls):
         for url in _urls:
             hash_url = hashlib.sha1(url.encode('utf-8')).hexdigest()
@@ -351,7 +354,6 @@ def crawl(urls):
 
                             content['text'] = article.text
                             content['description'] = article.meta_description
-                            #content['authors'] = article.authors
                             content['authors'] = ', '.join(article.authors) if article.authors is not None else None
                             content['top_image'] = article.top_image if article.top_image.split('.')[-1]!='ico' else ''
                             content['published_at'] = str(published_at.date()) if published_at<=downloaded_at else str(downloaded_at.date())
@@ -375,13 +377,13 @@ def crawl(urls):
                 trashed[hash_url] = content
 
 
-            # 종종 100%가 넘어가는 경우가 있다
-            # set.union(*urls.values()) 에 중복항목이 있는 듯: 요건 set이라서 문제였던것 같다. 해결한듯 (2019.09.27)
-            prg.stamp(pub=pub)
+        # 종종 100%가 넘어가는 경우가 있다
+        # set.union(*urls.values()) 에 중복항목이 있는 듯: 요건 set이라서 문제였던것 같다. 해결한듯 (2019.09.27)
+        prg.stamp(pub=pub)
 
 
     async def main():
-        fts = [asyncio.ensure_future(_crawl(pub, _urls)) for pub, _urls in urls.items()]
+        fts = [asyncio.ensure_future(_crawl(pub, _urls)) for pub, _urls in urls.items() if len(_urls)!=0]
         await asyncio.gather(*fts)
 
 
@@ -439,8 +441,13 @@ class NewsCrawler:
 
 
 
-    def crawl(self):
-        downloaded, trashed = crawl(self.selected)
+    def crawl(self, *pubs):
+        if len(pubs) == 0:
+            _selected = self.selected
+        else:
+            _selected = {k:v for k,v in self.selected.items() if k in pubs}
+            
+        downloaded, trashed = crawl(_selected)
         urls_downloaded = self._extract_urls(downloaded)
         urls_trashed = self._extract_urls(trashed)
         summary = self._summary(downloaded=urls_downloaded, trashed=urls_trashed)
@@ -458,13 +465,41 @@ class NewsCrawler:
     def record(self):
         record(self.recorder, downloaded=self.downloaded, trashed=self.trashed)
 
+    
+    def report(self, using='sendgrid'):
+        if using == 'sendgrid':
+            self.report_sendgrid()
+            
+        elif using == 'smtp':
+            self.report_smtp()
+        
+        
+    def report_sendgrid(self):
+        '''
+        하루 최대 100개의 제약이 있다
+        https://github.com/sendgrid/sendgrid-python
+        '''
+        acc = accounts.report_account
+        now = str(pd.Timestamp.utcnow())[:19]
+        
+        message = Mail(from_email=acc['from'], 
+                       to_emails=acc['to'], 
+                       subject=now+' NEWSCRAWLER REPORT', 
+                       html_content=self.crawl_summary.to_html())
 
-    def report(self):
+        try:
+            sg = SendGridAPIClient(api_key=acc['sendgrid_key'])
+            response = sg.send(message)
+            print(response.status_code)
+
+        except Exception as e:
+            print(e.message)
+        
+        
+    def report_smtp(self):
         '''
         구글의 [보안 수준이 낮은 앱의 액세스]를 허용해야한다 (2019.10.31) -> 다른방법 없을까?
         '''
-        #report_account = 'smtp_gmail.json'
-        #acc = json.loads(Path(self.report_account).read_text())
         acc = accounts.report_account
         msg = MIMEMultipart('alternative')
 
@@ -474,8 +509,8 @@ class NewsCrawler:
         msg['To'] = ', '.join(acc['to'])
         msg.attach(MIMEText(self.crawl_summary.to_html(), 'html'))
 
-        with smtplib.SMTP_SSL(acc['host']) as smtp:
-            smtp.login(acc['from'], acc['pw'])
+        with smtplib.SMTP_SSL(acc['smtp_host']) as smtp:
+            smtp.login(acc['from'], acc['smtp_pw'])
             smtp.send_message(msg)
 
 

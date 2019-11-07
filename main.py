@@ -1,10 +1,20 @@
-from home.wsgi import application
+from newscrawler import NewsCrawler
+from flask import jsonify
+import requests
+import json
 
-# App Engine by default looks for a main.py file at the root of the app
-# directory with a WSGI-compatible object called app.
-# This file imports the WSGI-compatible object of your Django app,
-# application from mysite/wsgi.py and renames it app so it is discoverable by
-# App Engine without additional configuration.
-# Alternatively, you can add a custom entrypoint field in your app.yaml:
-# entrypoint: gunicorn -b :$PORT mysite.wsgi
-app = application
+def newsupdate(request):
+#     crawler = NewsCrawler(storage='bigquery')
+#     crawler.collect()
+#     crawler.crawl('reuters', 'investing.com', 'cnn')
+#     crawler.record()
+#     crawler.report(using='sendgrid')
+    
+    resp = requests.get('https://us-central1-global-news-crawl.cloudfunctions.net/test').text
+    print(json.loads(resp))
+    return 'success'
+
+
+def test(request):
+    data = {'a':1, 'b':2, 'c':3}
+    return jsonify(**data)
