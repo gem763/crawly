@@ -29,10 +29,14 @@ from email.header import Header
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-# Suppress UnknownTimezoneWarning
 import warnings
 from dateutil.parser import UnknownTimezoneWarning
+
+# Suppress: UnknownTimezoneWarning
 warnings.filterwarnings('ignore', category=UnknownTimezoneWarning)
+
+# Suppress: Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER
+warnings.filterwarnings('ignore', category=UnicodeWarning)
 
 
 def _config():
@@ -63,7 +67,8 @@ class Progressor:
 
 
 def clean_url(pub, url):
-    url = url.replace('http://', 'https://')
+    # 양쪽공백 제거해야한다: RT.com 일부 url에서 오른쪽 공백있는 url 발견(2019.11.08)
+    url = url.strip().replace('http://', 'https://')
 
     try: url = url[:url.index('#')]
     except: pass
