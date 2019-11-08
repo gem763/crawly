@@ -1,20 +1,24 @@
 from newscrawler import NewsCrawler
-from flask import jsonify
-import requests
-import json
+from flask import Flask
 
-def newsupdate(request):
-#     crawler = NewsCrawler(storage='bigquery')
-#     crawler.collect()
-#     crawler.crawl('reuters', 'investing.com', 'cnn')
-#     crawler.record()
-#     crawler.report(using='sendgrid')
+
+app = Flask(__name__)
+
+
+@app.route('/newsupdate')
+def newsupdate():
+    crawler = NewsCrawler(storage='bigquery')
+    crawler.collect()
+    crawler.crawl()
+    crawler.record()
+    crawler.report(using='sendgrid')
+    return 'updated'
+
+
+@app.route('/test')
+def test():
+    return 'hello'
+
     
-    resp = requests.get('https://us-central1-global-news-crawl.cloudfunctions.net/test').text
-    print(json.loads(resp))
-    return 'success'
-
-
-def test(request):
-    data = {'a':1, 'b':2, 'c':3}
-    return jsonify(**data)
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=8080, debug=True)

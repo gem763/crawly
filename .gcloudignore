@@ -14,7 +14,7 @@
 .gitignore
 
 node_modules
-#!include:.gitignore
 
-test/en_core_web_lg-2.1.0.tar.gz
-test/bbc
+.ipynb_checkpoints
+venv
+test

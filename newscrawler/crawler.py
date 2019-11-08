@@ -13,8 +13,11 @@ import hashlib
 import glob
 import pandas as pd
 from . import publishers
+# import publishers
 from .record import Recorder
+# from record import Recorder
 from . import accounts
+# import accounts
 from pathlib import Path
 from langdetect import detect
 from .pubtime_extractor import extractArticlePublishedDate
@@ -36,6 +39,7 @@ from dateutil.parser import UnknownTimezoneWarning
 warnings.filterwarnings('ignore', category=UnknownTimezoneWarning)
 
 # Suppress: Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER
+# 이거 안되는듯... (2019.11.08)
 warnings.filterwarnings('ignore', category=UnicodeWarning)
 
 
