@@ -12,6 +12,8 @@ import time
 import hashlib
 import glob
 import pandas as pd
+import signal
+
 from . import publishers
 # import publishers
 from .record import Recorder
@@ -307,7 +309,11 @@ def get_title(article):
         return article.title
 
 
-
+def timeout_handler():
+    raise Exception('timeout')
+    
+    
+    
 def crawl_by_pub(pub, _urls):
     pass
     
@@ -332,6 +338,9 @@ def crawl(urls):
                 'downloaded_at': str(downloaded_at)
             }
 
+            #signal.signal(signal.SIGNALRM, timeout_handler)
+            #signal.alarm(60)
+            
             try:
                 article = await loop.run_in_executor(None, get_article, url)
                 title = await loop.run_in_executor(None, get_title, article)
