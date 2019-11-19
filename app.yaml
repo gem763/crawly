@@ -1,6 +1,6 @@
 # runtime: python37
 # instance_class: B8
- 
+
 # handlers:
 # - url: /.*
 #   secure: always
@@ -10,7 +10,7 @@
 # basic_scaling:
 #   idle_timeout: 30m
 #   max_instances: 10
-  
+
 
 
 runtime: python
@@ -19,11 +19,11 @@ entrypoint: gunicorn -b :$PORT --threads=4 main:app
 
 runtime_config:
   python_version: 3
-  
+
 manual_scaling:
   instances: 1
-  
+
 resources:
-  cpu: 8
-  memory_gb: 40
+  cpu: 4
+  memory_gb: 20
 #   disk_size_gb: 10
