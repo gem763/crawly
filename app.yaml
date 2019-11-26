@@ -1,29 +1,30 @@
-# runtime: python37
-# instance_class: B8
+runtime: python37
+instance_class: B8
+entrypoint: gunicorn -b :$PORT --threads=4 main:app # 이부분을 추가했더니 표준환경에서도 돌아갔다...왜? 2019.11.26
 
-# handlers:
-# - url: /.*
-#   secure: always
-#   redirect_http_response_code: 301
-#   script: auto
+handlers:
+- url: '/.*'
+  secure: always
+  redirect_http_response_code: 301
+  script: auto
 
-# basic_scaling:
-#   idle_timeout: 30m
-#   max_instances: 10
+basic_scaling:
+  idle_timeout: 30m
+  max_instances: 1
 
 
 
-runtime: python
-env: flex
-entrypoint: gunicorn -b :$PORT --threads=4 main:app
-
-runtime_config:
-  python_version: 3
-
-manual_scaling:
-  instances: 1
-
-resources:
-  cpu: 4
-  memory_gb: 20
-#   disk_size_gb: 10
+# runtime: python
+# env: flex
+# entrypoint: gunicorn -b :$PORT --threads=4 main:app
+#
+# runtime_config:
+#   python_version: 3
+#
+# manual_scaling:
+#   instances: 1
+#
+# resources:
+#   cpu: 2
+#   memory_gb: 10
+# #   disk_size_gb: 10
