@@ -6,7 +6,7 @@ select_urls()에서 url의 중복을 체크하기 위해 (2019.10.04)
 src = {
              'huffpost': {'pubname': 'HuffPost',                    'domain': ['https://huffpost.com']}, 
                   'cnn': {'pubname': 'CNN',                         'domain': ['https://cnn.com']}, # ?=
-        'investing.com': {'pubname': 'Investing.com',               'domain': ['https://investing.com']}, 
+#         'investing.com': {'pubname': 'Investing.com',               'domain': ['https://investing.com']}, 
              'politico': {'pubname': 'POLITICO',                    'domain': ['https://politico.com']}, 
                  'time': {'pubname': 'TIME',                        'domain': ['https://time.com']}, 
                  'cnbc': {'pubname': 'CNBC',                        'domain': ['https://cnbc.com']}, 
@@ -28,7 +28,7 @@ src = {
 
                   'npr': {'pubname': 'npr',                         'domain': ['https://npr.org']}, 
           'newrepublic': {'pubname': 'NEW REPUBLIC',                'domain': ['https://newrepublic.com']}, 
-                'yahoo': {'pubname': 'yahoo',                       'domain': ['https://yahoo.com', 'https://news.yahoo.com']}, 
+#                 'yahoo': {'pubname': 'yahoo',                       'domain': ['https://yahoo.com', 'https://news.yahoo.com']}, 
           'independent': {'pubname': 'INDEPENDENT',                 'domain': ['https://independent.co.uk']}, 
              'heritage': {'pubname': 'Heritage',                    'domain': ['https://heritage.org']}, 
                 'zdnet': {'pubname': 'ZDNet',                       'domain': ['https://www.zdnet.com']}, # 반드시 www가 붙어야함
